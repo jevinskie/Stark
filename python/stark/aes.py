@@ -20,21 +20,34 @@ sbox = (
 
 rcon = (0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,)
 
-def expandkey(key):
+def expandkey(key, roundnum=0):
     nwords = len(key) // 4
-    nrounds = {16: 11, 24: 13, 32: 15}[len(key)]
+    nrounds = len(key) * 8 // 32 + 7
     w = [[None for j in range(0, 4)] for i in range(0, 4*nrounds)]
 
+    # fill in round key
     for i in range(0, nwords):
-        w[i] = [key[i*4+j] for j in range(0, 4)]
+        w[i+roundnum*4] = [key[i*4+j] for j in range(0, 4)]
 
+    # go backwards to round 0
+    for i in range(roundnum * 4 - 1, -1, -1):
+        temp = w[i+nwords-1]
+        if i % nwords == 0:
+            temp = [temp[(j+1) % 4] for j in range(0, 4)]
+            temp = [sbox[temp[j]] for j in range(0, 4)]
+            temp[0] ^= rcon[i // nwords + 1]
+        elif i % nwords == 4 and nwords > 6:
+            temp = [sbox[temp[j]] for j in range(0, 4)]
+        w[i] = [w[i+nwords][j] ^ temp[j] for j in range(0, 4)]
+
+    # go forwards
     for i in range(nwords, len(w)):
         temp = w[i-1]
         if i % nwords == 0:
             temp = [temp[(j+1) % 4] for j in range(0, 4)]
             temp = [sbox[temp[j]] for j in range(0, 4)]
             temp[0] ^= rcon[i // nwords]
-        if i % nwords == 4 and nwords > 6:
+        elif i % nwords == 4 and nwords > 6:
             temp = [sbox[temp[j]] for j in range(0, 4)]
         w[i] = [w[i-nwords][j] ^ temp[j] for j in range(0, 4)]
 
