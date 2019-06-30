@@ -1,3 +1,12 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+
+from builtins import bytes
+from builtins import range
+from future import standard_library
+standard_library.install_aliases()
 
 sbox = (
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -21,6 +30,7 @@ sbox = (
 rcon = (0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,)
 
 def expandkey(key, roundnum=0):
+    key = bytes(key)
     nwords = len(key) // 4
     nrounds = len(key) * 8 // 32 + 7
     w = [[None for j in range(0, 4)] for i in range(0, 4*nrounds)]
